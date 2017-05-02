@@ -92,6 +92,7 @@ for i in *.wav; do
         rm $i
     fi
 done
+cd ../
 }
 
 function f_randomise_sets {
@@ -100,8 +101,8 @@ for i in "$(ls train-clean-100-wav|shuf|head -n 500|cut -f 1 -d".")"; do echo $i
 
 
 #Entry point: script config: comment the functions that you do not need.
-#f_librispeech # get and prepare librispeech
-#f_tedlium # get and prepare tedlium
+f_librispeech # get and prepare librispeech
+f_tedlium # get and prepare tedlium
 #In future releases, add functions to include other datasets here
 f_cleanup # go over the dataset to clean inconsistencies
 f_separate_transcript # split the dataset.txt into as many txt as wav files (weither you need this depends on the format the model is expecting)s
