@@ -7,22 +7,12 @@
 #THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #############################################################
 
-#Purpose:
-# This scripts fetches open datasets of speech and transcription and aggregates them into a large metaset hopefully suitable for machine learning.
-
-#Requirements:
-# ffmpeg
-# parallel (O. Tange (2011): GNU Parallel - The Command-Line Power Tool ;login: The USENIX Magazine, February 2011:42-47.)
-
-#Special notes:
-# 1. I've used parallel (and sem) to spawn nproc $(nproc) ffmpeg (the number of cores in the machine).  Machine might be less responsive, and this leads to second note.... the more cores you have, the more it is important that you mount dataset on a separate drive.
-# 2. I mount a partition from another physical hard drive as the dataset folder, and recommend you do the same, in order to avoid having plenty of simultaneous read/write on the same drive.  On the one hand, this makes things much faster, on the other hand if you don't, this is really bad for your drive.
-
 #Versions:
 # 0.01 concept test
 # 0.02 serialised librispeech - used parallel
 # 0.03 added tedlium, added f_separate_transcript
 # 0.04 cleaned up a bit and added comments
+# 0.05 corrected  bug in f_cleanup
 
 if [[ ! -d dataset ]]; then #We create dataset dir if it doesn't exist, again, I recommend mounting from a separate drive.
     mkdir dataset
@@ -88,10 +78,10 @@ rm -Rf TEDLIUM_release1
 function f_cleanup { #deletes samples that did not aggregate well
 echo "Cleaning dataset"
 #1: remove dataset records that don't have a wav file
+ls dataset/|grep ".wav"|cut -f 2 -d"/">filelist.txt
 while IFS='' read -r line || [[ -n "$line" ]]; do
 	identif="$(echo $line|cut -f 1 -d" ")"
-	filelist="$(ls dataset/*.wav|cut -f 2 -d"/")"
-	if [[ "$(echo $filelist|grep $identif)" = "" ]]; then
+		if [[ "$(cat filelist.txt|grep $identif)" = "" ]]; then
         echo "$identif" && grep -v $identif dataset.txt > dataset2 && mv dataset2 dataset.txt
     fi
 done < "dataset.txt"
@@ -110,8 +100,8 @@ for i in "$(ls train-clean-100-wav|shuf|head -n 500|cut -f 1 -d".")"; do echo $i
 
 
 #Entry point: script config: comment the functions that you do not need.
-f_librispeech # get and prepare librispeech
-f_tedlium # get and prepare tedlium
+#f_librispeech # get and prepare librispeech
+#f_tedlium # get and prepare tedlium
 #In future releases, add functions to include other datasets here
 f_cleanup # go over the dataset to clean inconsistencies
 f_separate_transcript # split the dataset.txt into as many txt as wav files (weither you need this depends on the format the model is expecting)s
