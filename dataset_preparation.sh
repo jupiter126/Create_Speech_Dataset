@@ -13,6 +13,8 @@
 # 0.03 added tedlium, added f_separate_transcript
 # 0.04 cleaned up a bit and added comments
 # 0.05 corrected  bug in f_cleanup
+# 0.06 added f_count_time to evaluate dataset total recording time and corrected small bug
+
 
 if [[ ! -d dataset ]]; then #We create dataset dir if it doesn't exist, again, I recommend mounting from a separate drive.
     mkdir dataset
@@ -99,6 +101,12 @@ function f_randomise_sets {
 for i in "$(ls train-clean-100-wav|shuf|head -n 500|cut -f 1 -d".")"; do echo $i>>datalist.txt; done && for i in $(cat datalist.txt); do mv train-clean-100-wav/$i.{txt,wav} test-clean-wav/; done
 }
 
+function f_count_time { # calculates the total amount of recording time in the dataset as of 0.06, aggregated dataset time is about 1197 hours.
+cd dataset
+ls|grep ".wav"|parallel -j$(nproc) soxi -D {}|awk '{SUM += $1} END { printf "%d:%d:%d\n",SUM/3600,SUM%3600/60,SUM%60}'
+cd ../
+}
+
 
 #Entry point: script config: comment the functions that you do not need.
 f_librispeech # get and prepare librispeech
@@ -107,3 +115,4 @@ f_tedlium # get and prepare tedlium
 f_cleanup # go over the dataset to clean inconsistencies
 f_separate_transcript # split the dataset.txt into as many txt as wav files (weither you need this depends on the format the model is expecting)s
 #f_randomise_sets # creates random training and test sets
+f_count_time
