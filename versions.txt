@@ -1,0 +1,26 @@
+#Versions:
+# 0.01  concept test
+# 0.02  serialised librispeech - used parallel
+# 0.03  added tedlium, added f_separate_transcript
+# 0.04  cleaned up a bit and added comments
+# 0.05  correct  bug in f_cleanup
+# 0.06  added f_count_time to evaluate dataset total recording time and corrected small bug
+# 0.07  added options to choose recording and transcription folders
+#       correct bug in f_cleanup ("*" goes boom when too many files, replaced with some ls>temp fils)
+#       correct bugs in f_tedlium
+#       add a few double quotes
+#       comment f_randomise_sets, still too prototypish
+#       remove dataset.txt if it exists
+#       update readme.md
+#       made ffmpeg quite
+#       added pv for tar progress
+# 0.08  correct major release-blocking bug in f_librispeach
+#       add current function status at end of file
+# 0.09  Most of TEDLIUM works, still a few lines with bugs somehow, and I don't know exactly why (left these in program output). if you know a more elegant way to define $startt and $stopt, please let me know!!!
+# 0.10  Polish f_separate_transcript and f_count_time polished and renamed f_cleanup to f_clean_dataset
+# 0.11  add script and interactive mode
+
+# TODO 
+# rebuild f_randomise_sets to include a proper structure and logging and reproducability.
+# add more datasets
+# discover more bugs
