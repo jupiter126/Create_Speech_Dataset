@@ -16,11 +16,16 @@
 #       added pv for tar progress
 # 0.08  correct major release-blocking bug in f_librispeach
 #       add current function status at end of file
-# 0.09  Most of TEDLIUM works, still a few lines with bugs somehow, and I don't know exactly why (left these in program output). if you know a more elegant way to define $startt and $stopt, please let me know!!!
-# 0.10  Polish f_separate_transcript and f_count_time polished and renamed f_cleanup to f_clean_dataset
+# 0.09  most of TEDLIUM works, still a few lines with bugs somehow, and I don't know exactly why (left these in program output). if you know a more elegant way to define $startt and $stopt, please let me know!!!
+# 0.10  polish f_separate_transcript and f_count_time polished and renamed f_cleanup to f_clean_dataset
 # 0.11  add script and interactive mode
+# 0.12  rename f_randomise_sets in f_custom_set, and rewrote the entire function
+#		change options for added flexibility
+#		start to include reproducability poc (not usable yet)
+# 0.13  added f_runtime, allowing to know current runtime
 
 # TODO 
 # rebuild f_randomise_sets to include a proper structure and logging and reproducability.
 # add more datasets
 # discover more bugs
+# solve dirty line in TEDLIUM (help plz ^^)

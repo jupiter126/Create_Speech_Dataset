@@ -1,7 +1,9 @@
 # Create_Speech_Dataset
 
+Note: Last tested version is 0.11 - test is currently running on 0.13, but takes a long time!
+
 # Purpose:
-This scripts fetches open datasets of speech and transcription and aggregates them into a large metaset hopefully suitable for machine learning. Current script builds a 1089 hour dataset.
+This scripts fetches open datasets of speech and transcription and aggregates them into a large metaset hopefully suitable for machine learning. Current script builds a 1089 hour dataset, based on librispeech and TEDLIUM
 
 # Requirements:
 - ffmpeg<br />
@@ -17,11 +19,35 @@ This scripts fetches open datasets of speech and transcription and aggregates th
 
 # Usage
 Reading the source always helps
-- Either the program is started without arguments and will be ran in "intercative" mode
-- Or the program is ran with arguments for script mode.
-  So far, the arguments for scripting mode are :
-  - 1 to build and aggregate librispeech and TEDLIUM
-  - 2 To build librispeech
-  - 3 To build TEDLIUM
-  
+## first, set options:
+
+datasetdir="dataset"
+recdir="recordings"		#name of the directory used to store recordings
+texdir="transcripts"	#name of the directory used to store transcripts, if transcripts are to be saved in the same dir as wav, set this to the same value as var above.
+traindir="train"		#name of the dir containing training set
+testdir="test"			#name of the dir containing test set
+testval="500"			#number of entries in test set (0 if you don't want a test set)
+devdir="dev"			#name of the dir containing dev set
+devval="200"			#number of entries in the dev set
+
+the defaults options will create the following:
+-dataset
+	-test
+		-recordings: 500 wav files
+		-transcripts: 500 corresponding txt files
+	-dev
+		-recordings: 200 wav files
+		-transcripts: 200 corresponding txt files
+	-train
+		-recordings: The rest of the wav files
+		-transcripts: The rest of corresponding text files
+
+## Once options are set,
+
+	- Either the program is started without arguments and will be ran in "intercative" mode, or the program is ran with arguments for script mode.
+	So far, the arguments for scripting mode are :
+		- 1 to build and aggregate librispeech and TEDLIUM
+		- 2 To build librispeech
+		- 3 To build TEDLIUM
+ 
   ==> to build only TEDLIUM --> ./dataset_preparation.sh 3
