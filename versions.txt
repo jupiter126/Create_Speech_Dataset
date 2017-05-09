@@ -23,6 +23,9 @@
 #		change options for added flexibility
 #		start to include reproducability poc (not usable yet)
 # 0.13  added f_runtime, allowing to know current runtime
+# 0.14  correct f_runtime and added a bit of color
+#		correct bug in f_tedlium
+
 
 # TODO 
 # rebuild f_randomise_sets to include a proper structure and logging and reproducability.

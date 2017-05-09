@@ -1,6 +1,6 @@
 # Create_Speech_Dataset
 
-Note: Last tested version is 0.11 - test is currently running on 0.13, but takes a long time!
+Note: Last version known to work is 0.11 - currently testing 0.14, but takes a long time!
 
 # Purpose:
 This scripts fetches open datasets of speech and transcription and aggregates them into a large metaset hopefully suitable for machine learning. Current script builds a 1089 hour dataset, based on librispeech and TEDLIUM
@@ -10,6 +10,7 @@ This scripts fetches open datasets of speech and transcription and aggregates th
 - pv<br />
 - sox<br />
 - parallel (O. Tange (2011): GNU Parallel - The Command-Line Power Tool ;login: The USENIX Magazine, February 2011:42-47.) <br />
+- bc (if bc is present on system, script will report running time once in a while)
 
 # Special notes:
 1. GNU parallel (and sem) are used to spawn $(nproc) ffmpeg (the number of cores in the machine), as side effect, the more cores you have, the more it is IO intensive on the hard drives, leading to point 2<br />

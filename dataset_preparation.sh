@@ -8,10 +8,11 @@
 #############################################################
 # Options
 # Warning: avoid spaces, I didn't test but tend to encounter problems with those in my scripts!
-#define final file hierarchy: 
+#define final file hierarchy:
 datasetdir="dataset"	#global dataset directory
 recdir="recordings"		#name of the directory used to store recordings
-texdir="transcripts"	#name of the directory used to store transcripts, if transcripts are to be saved in the same dir as wav, set this to the same value as var above.
+#texdir="transcripts"	#name of the directory used to store transcripts, if transcripts are to be saved in the same dir as wav, set this to the same value as var above.
+texdir="recordings"	#name of the directory used to store transcripts, if transcripts are to be saved in the same dir as wav, set this to the same value as var above.
 traindir="train"		#name of the dir containing training set
 testdir="test"			#name of the dir containing test set
 testval="500"			#number of entries in test set (0 if you don't want a test set)
@@ -19,14 +20,18 @@ devdir="dev"			#name of the dir containing dev set
 devval="200"			#number of entries in the dev set
 #End of options
 arg1="$1"
-start=$(date +%s)
+starttime="$(date +%s)"
+temptime="0"
 recodir="$datasetdir/$traindir/$recdir"
 textdir="$datasetdir/$traindir/$recdir"
 export recodir
 export textdir
 directory="$( cd -P "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+red=`tput bold ``tput setaf 1`
+green=`tput bold``tput setaf 2`
+reset=`tput sgr0`
 
-echo "dataset_preparation.sh v0.13"
+echo "dataset_preparation.sh v0.14"
 for directo in "$recodir" "$textdir"; do
 if [[ ! -d "$directo" ]]; then #We create dataset dir if it doesn't exist, again, I recommend mounting from a separate drive.
     mkdir -p "$directo"
@@ -51,6 +56,7 @@ while IFS='' read -r line || [[ -n "$line" ]]; do
         echo "$line"|cut -d" " -f2->"$textdir/$fname.txt"
     fi
 done < "dataset.txt"
+f_runtime
 }
 
 function f_librispeech { # aggregates librispeech datasets
@@ -76,6 +82,7 @@ for h in dev-clean dev-other test-clean test-other train-clean-100 train-clean-3
     sleep 5 && rm -Rf temp1 && sleep 5
 done
 rm -Rf LibriSpeech && sleep 5
+f_runtime
 }
 
 function f_tedlium { # aggregates librispeech's tedlium
@@ -83,7 +90,7 @@ if [[ ! -f TEDLIUM_release1.tar.gz ]]; then
     wget http://www.openslr.org/resources/7/TEDLIUM_release1.tar.gz
 fi
 echo "Uncompressing TEDLIUM..." && echo "source http://www.openslr.org/resources/7/TEDLIUM_release1.tar.gz">>"dataset.desc"
-pv TEDLIUM_release1.tar.gz|tar -xzf -
+#pv TEDLIUM_release1.tar.gz|tar -xzf -
 echo "Converting TEDLIUM to wav..."
 for h in dev test train; do
     cd TEDLIUM_release1/$h/stm
@@ -96,13 +103,15 @@ for h in dev test train; do
             transc="$(echo "$line"|cut -f 2 -d">"|sed -e 's/ //' -e 's/([0-9])//g' -e 's/<sil> //g' -e 's/<sil//g' -e 's/  / /g' )"
             if [ "$transc" != "ignore_time_segment_in_scoring" ] && [ "$transc" != "" ] && [ "$transc" != " " ]; then
 #The following line sucks, I'd appreciate help replacing it.  The commentented one shows the errors, while the other one sends them to /dev/null
-#                startt="$(echo "$line"|cut -f 4 -d" ")"&&secs=$(echo $startt|cut -f 1 -d.) && secs="$(printf '%d:%d:%d\n' $(($secs/3600)) $(($secs%3600/60)) $(($secs%60)))" && startt="$secs.$(echo $startt|cut -f 2 -d.)"  &&  stopt="$(echo "$line"|cut -f 5 -d" ")"&&secs=$(echo $stopt|cut -f 1 -d.) && secs="$(printf '%d:%d:%d\n' $(($secs/3600)) $(($secs%3600/60)) $(($secs%60)))" && stopt="$secs.$(echo $stopt|cut -f 2 -d.)"  #Replace this with something more elegant...
+#               startt="$(echo "$line"|cut -f 4 -d" ")" && secs=$(echo $startt|cut -f 1 -d.) && secs="$(printf '%d:%d:%d\n' $(($secs/3600)) $(($secs%3600/60)) $(($secs%60))            )" && startt="$secs.$(echo $startt|cut -f 2 -d.)" && stopt="$(echo "$line"|cut -f 5 -d" ")" && secs=$(echo $stopt|cut -f 1 -d.) && secs="$(printf '%d:%d:%d\n' $(($secs/3600)) $(($secs%3600/60)) $(($secs%60))            )" && stopt="$secs.$(echo $stopt|cut -f 2 -d.)"  #Replace this with something more elegant...
                 startt="$(echo "$line"|cut -f 4 -d" ")" && secs=$(echo $startt|cut -f 1 -d.) && secs="$(printf '%d:%d:%d\n' $(($secs/3600)) $(($secs%3600/60)) $(($secs%60)) 2>/dev/null)" && startt="$secs.$(echo $startt|cut -f 2 -d.)" && stopt="$(echo "$line"|cut -f 5 -d" ")" && secs=$(echo $stopt|cut -f 1 -d.) && secs="$(printf '%d:%d:%d\n' $(($secs/3600)) $(($secs%3600/60)) $(($secs%60)) 2>/dev/null)" && stopt="$secs.$(echo $stopt|cut -f 2 -d.)"  #Replace this with something more elegant...
-                ((cutcounter++))
-                if [ "$startt" != "0" ] && [ "$stopt" != "0" ]; then
-                    sem -j $(nproc) ffmpeg -nostats -loglevel 0 -i ../sph/$rectitle.sph -ss $startt -to $stopt -f wav -acodec pcm_s16le -vn -ac 1 -frame_size 100 ../../../$recodir/$rectitle-$cutcounter.wav & echo "$rectitle-$cutcounter $transc" >> ../../../dataset.txt
-                fi
-            fi
+					if [ "$startt" != "0" ] && [ "$stopt" != "0" ]; then
+						((cutcounter++))
+						sem -j $(nproc) ffmpeg -nostats -loglevel 0 -i ../sph/$rectitle.sph -ss $startt -to $stopt -f wav -acodec pcm_s16le -vn -ac 1 -frame_size 100 ../../../$recodir/$rectitle-$cutcounter.wav & echo "$rectitle-$cutcounter $transc" >> ../../../dataset.txt
+#						echo "sem -j $(nproc) ffmpeg -nostats -loglevel 0 -i ../sph/$rectitle.sph -ss $startt -to $stopt -f wav -acodec pcm_s16le -vn -ac 1 -frame_size 100 ../../../$recodir/$rectitle-$cutcounter.wav"
+#						echo "transc is $transc"
+					fi
+				fi
         done < "$i"
     done
     cd "$directory"
@@ -110,6 +119,7 @@ done
 echo "waiting 2 minutes before killing all remaining ffmpeg"
 sleep 120 && for i in $(pgrep -f ffmpeg);do kill -9 $i && sleep 1;done
 rm -Rf TEDLIUM_release1
+f_runtime
 }
 
 function f_clean_dataset { # deletes samples that did not aggregate well
@@ -131,6 +141,7 @@ while IFS='' read -r line || [[ -n "$line" ]]; do
 done < "filelist.txt"
 sleep 5 && rm filelist.txt
 echo "Done cleaning dataset"
+f_runtime
 }
 
 function f_count_time { # calculates the total amount of recording time in the dataset as of 0.06, complete aggregated dataset time is about 1197 hours.
@@ -138,11 +149,19 @@ echo "Counting dataset recording time"
 cd "$recodir" || return 1
 ls|grep ".wav"|parallel -j"$(nproc)" soxi -D {}|awk '{SUM += $1} END { printf "%d:%d:%d\n",SUM/3600,SUM%3600/60,SUM%60}'
 cd "$directory"
+f_runtime
 }
 
-function f_runtime {
-runtime="$(echo "$(date +%s) - $start" | bc -l)"
-echo "Current runtime is $(printf '%dh:%dm:%ds\n' $(($runtime/3600)) $(($runtime%3600/60)) $(($runtime%60)))"
+function f_runtime { # gives the runtime once in a while
+if [[ "$(which bc 2>/dev/null)" != "" ]]; then
+	runningtime="$(echo $(date +%s)-$starttime | bc -l)"
+	echo "${red}Current runtime is $(printf '%dh:%dm:%ds\n' $(($runningtime/3600)) $(($runningtime%3600/60)) $(($runningtime%60)))${reset}"
+	if [[ "$temptime" != "0" ]]; then
+		lastftime="$(echo "$(date +%s) - $temptime" | bc -l)"
+		echo "previous function took $(printf '%dh:%dm:%ds\n' $(($runningtime/3600)) $(($runningtime%3600/60)) $(($runningtime%60)))"
+	fi
+	temptime=$(date +%s)
+fi
 }
 
 function f_custom_set {  # this is where we create and populate dev and test directories
@@ -168,6 +187,7 @@ cd "$datasetdir"
 find * .>>../dataset.desc
 cd ../
 tar -czf "dataset.desc.tar.gz" "dataset.desc"
+f_runtime
 }
 
 function f_nope { # thanks to moo \o/
@@ -186,19 +206,12 @@ echo "/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/"
 function f_script { # non interactive mode entry point
 if [[ "x$arg1" = "x1" ]]; then
     f_purge_dataset_txt
-    f_runtime
     f_librispeech
-    f_runtime
     f_tedlium
-    f_runtime
     f_clean_dataset
-    f_runtime
     f_separate_transcript
-    f_runtime
     f_count_time
-    f_runtime
     f_custom_set
-    f_runtime
 elif [[ "x$arg1" = "x2" ]]; then
     f_purge_dataset_txt
     f_librispeech
