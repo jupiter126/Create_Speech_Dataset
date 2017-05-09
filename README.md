@@ -45,10 +45,10 @@ the defaults options will create the following:
 
 ## Once options are set,
 
-	- Either the program is started without arguments and will be ran in "intercative" mode, or the program is ran with arguments for script mode.
-	So far, the arguments for scripting mode are :
-		- 1 to build and aggregate librispeech and TEDLIUM
-		- 2 To build librispeech
-		- 3 To build TEDLIUM
+- Either the program is started without arguments and will be ran in "intercative" mode, or the program is ran with arguments for script mode.
+So far, the arguments for scripting mode are :
+	- 1 to build and aggregate librispeech and TEDLIUM
+	- 2 To build librispeech
+	- 3 To build TEDLIUM
  
   ==> to build only TEDLIUM --> ./dataset_preparation.sh 3
