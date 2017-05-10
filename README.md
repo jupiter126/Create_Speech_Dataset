@@ -1,6 +1,6 @@
 # Create_Speech_Dataset
 
-Note: Last version known to work is 0.11 - currently testing 0.14, but takes a long time!
+Note: Last version known to work is 0.11 - currently testing 0.16, but complete run takes a long time!
 
 # Purpose:
 This scripts fetches open datasets of speech and transcription and aggregates them into a large metaset hopefully suitable for machine learning. Current script builds a 1089 hour dataset, based on librispeech and TEDLIUM
@@ -16,7 +16,8 @@ This scripts fetches open datasets of speech and transcription and aggregates th
 1. GNU parallel (and sem) are used to spawn $(nproc) ffmpeg (the number of cores in the machine), as side effect, the more cores you have, the more it is IO intensive on the hard drives, leading to point 2<br />
 2. It is recommended to mount a partition from another physical hard drive as the "dataset" folder.  This makes things much faster, and will help preventing this script to burn your hard drive (We're talking about read/writes of over 1 million files in total)
 3. When needed to regenerate a new dataset from scratch, it goes MUCH faster do fdisk/mkfs the dataset partition than to rm all files
-   something like "# umount /dev/sdg1 && fdisk /dev/sdg && mkfs.ext4 /dev/sdg1 && mount /dev/sdg1 && chown -R jupiter:jupiter /home/jupiter/data/_Speech/dataset"
+   something like: 
+   # umount /dev/sdg1 && fdisk /dev/sdg && mkfs.ext4 /dev/sdg1 && mount /dev/sdg1 && chown -R jupiter:jupiter /home/jupiter/data/_Speech/dataset
 
 # Usage
 Reading the source always helps

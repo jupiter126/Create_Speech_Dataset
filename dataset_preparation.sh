@@ -11,8 +11,7 @@
 #define final file hierarchy:
 datasetdir="dataset"	#global dataset directory
 recdir="recordings"		#name of the directory used to store recordings
-#texdir="transcripts"	#name of the directory used to store transcripts, if transcripts are to be saved in the same dir as wav, set this to the same value as var above.
-texdir="recordings"	#name of the directory used to store transcripts, if transcripts are to be saved in the same dir as wav, set this to the same value as var above.
+texdir="transcripts"	#name of the directory used to store transcripts, if transcripts are to be saved in the same dir as wav, set this to the same value as var above.
 traindir="train"		#name of the dir containing training set
 testdir="test"			#name of the dir containing test set
 testval="500"			#number of entries in test set (0 if you don't want a test set)
@@ -31,7 +30,7 @@ red=`tput bold ``tput setaf 1`
 green=`tput bold``tput setaf 2`
 reset=`tput sgr0`
 
-echo "dataset_preparation.sh v0.14"
+echo "dataset_preparation.sh v0.16"
 for directo in "$recodir" "$textdir"; do
 if [[ ! -d "$directo" ]]; then #We create dataset dir if it doesn't exist, again, I recommend mounting from a separate drive.
     mkdir -p "$directo"
@@ -90,7 +89,7 @@ if [[ ! -f TEDLIUM_release1.tar.gz ]]; then
     wget http://www.openslr.org/resources/7/TEDLIUM_release1.tar.gz
 fi
 echo "Uncompressing TEDLIUM..." && echo "source http://www.openslr.org/resources/7/TEDLIUM_release1.tar.gz">>"dataset.desc"
-#pv TEDLIUM_release1.tar.gz|tar -xzf -
+pv TEDLIUM_release1.tar.gz|tar -xzf -
 echo "Converting TEDLIUM to wav..."
 for h in dev test train; do
     cd TEDLIUM_release1/$h/stm
@@ -100,18 +99,17 @@ for h in dev test train; do
         while IFS='' read -r line || [[ -n "$line" ]]; do
             startt="0"
             stopt="0"
-            transc="$(echo "$line"|cut -f 2 -d">"|sed -e 's/ //' -e 's/([0-9])//g' -e 's/<sil> //g' -e 's/<sil//g' -e 's/  / /g' )"
+            transc="$(echo "$line"|cut -f 2 -d">"|sed -e 's/ //' -e 's/([0-9])//g' -e 's/<sil> //g' -e 's/<sil//g' -e 's/  / /g' -e 's/\t/ /g' )"
             if [ "$transc" != "ignore_time_segment_in_scoring" ] && [ "$transc" != "" ] && [ "$transc" != " " ]; then
-#The following line sucks, I'd appreciate help replacing it.  The commentented one shows the errors, while the other one sends them to /dev/null
-#               startt="$(echo "$line"|cut -f 4 -d" ")" && secs=$(echo $startt|cut -f 1 -d.) && secs="$(printf '%d:%d:%d\n' $(($secs/3600)) $(($secs%3600/60)) $(($secs%60))            )" && startt="$secs.$(echo $startt|cut -f 2 -d.)" && stopt="$(echo "$line"|cut -f 5 -d" ")" && secs=$(echo $stopt|cut -f 1 -d.) && secs="$(printf '%d:%d:%d\n' $(($secs/3600)) $(($secs%3600/60)) $(($secs%60))            )" && stopt="$secs.$(echo $stopt|cut -f 2 -d.)"  #Replace this with something more elegant...
-                startt="$(echo "$line"|cut -f 4 -d" ")" && secs=$(echo $startt|cut -f 1 -d.) && secs="$(printf '%d:%d:%d\n' $(($secs/3600)) $(($secs%3600/60)) $(($secs%60)) 2>/dev/null)" && startt="$secs.$(echo $startt|cut -f 2 -d.)" && stopt="$(echo "$line"|cut -f 5 -d" ")" && secs=$(echo $stopt|cut -f 1 -d.) && secs="$(printf '%d:%d:%d\n' $(($secs/3600)) $(($secs%3600/60)) $(($secs%60)) 2>/dev/null)" && stopt="$secs.$(echo $stopt|cut -f 2 -d.)"  #Replace this with something more elegant...
-					if [ "$startt" != "0" ] && [ "$stopt" != "0" ]; then
-						((cutcounter++))
-						sem -j $(nproc) ffmpeg -nostats -loglevel 0 -i ../sph/$rectitle.sph -ss $startt -to $stopt -f wav -acodec pcm_s16le -vn -ac 1 -frame_size 100 ../../../$recodir/$rectitle-$cutcounter.wav & echo "$rectitle-$cutcounter $transc" >> ../../../dataset.txt
-#						echo "sem -j $(nproc) ffmpeg -nostats -loglevel 0 -i ../sph/$rectitle.sph -ss $startt -to $stopt -f wav -acodec pcm_s16le -vn -ac 1 -frame_size 100 ../../../$recodir/$rectitle-$cutcounter.wav"
-#						echo "transc is $transc"
-					fi
+#The following 2 lines suck, help replacing them would be appreciated.
+				startt="$(echo "$line"|cut -f 4 -d" ")" && secs=$(echo $startt|cut -f 1 -d.) && if [[ $secs =~ ^-?[0-9]+$ ]]; then 
+					secs="$(printf '%d:%d:%d\n' $(($secs/3600)) $(($secs%3600/60)) $(($secs%60)))" && startt="$secs.$(echo $startt|cut -f 2 -d.)" && stopt="$(echo "$line"|cut -f 5 -d" ")" && secs=$(echo $stopt|cut -f 1 -d.) && secs="$(printf '%d:%d:%d\n' $(($secs/3600)) $(($secs%3600/60)) $(($secs%60)))" && stopt="$secs.$(echo $stopt|cut -f 2 -d.)"  #Replace this with something more elegant...
+					((cutcounter++))
+					sem -j $(nproc) --timeout 30 --id tedlium ffmpeg -nostats -loglevel 0 -i ../sph/$rectitle.sph -ss $startt -to $stopt -f wav -acodec pcm_s16le -vn -ac 1 -frame_size 100 ../../../$recodir/$rectitle-$cutcounter.wav 2>/dev/null & echo "$rectitle-$cutcounter $transc" >> ../../../dataset.txt
+				else
+					echo "$line" >> "$directory/tedliumerrors.txt"
 				fi
+			fi
         done < "$i"
     done
     cd "$directory"
