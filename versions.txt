@@ -27,6 +27,8 @@
 #		try to correct bug in f_tedlium (tried to send errors to /dev/null)
 # 0.15  try to correct bug in f_tedlium (some points of dataset are not formatted right, replaced tabs with spaces)
 # 0.16  correct bug in f_tedlium (check if $secs is a number before doing division, else skip and log line) - test is running, seems to finally be fixed!
+# 0.17	change f_script and script options
+# 0.18	correct small bug in f_custom_set
 
 
 # TODO 
@@ -34,3 +36,4 @@
 # add more datasets
 # discover more bugs
 # solve dirty line in TEDLIUM (help plz ^^)
+# build datasets without mixing

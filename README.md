@@ -1,6 +1,6 @@
 # Create_Speech_Dataset
 
-Note: Last version known to work is 0.11 - currently testing 0.16, but complete run takes a long time!
+Note: Last version known to work is 0.18
 
 # Purpose:
 This scripts fetches open datasets of speech and transcription and aggregates them into a large metaset hopefully suitable for machine learning. Current script builds a 1089 hour dataset, based on librispeech and TEDLIUM
@@ -48,8 +48,12 @@ the defaults options will create the following:
 
 - Either the program is started without arguments and will be ran in "intercative" mode, or the program is ran with arguments for script mode.
 So far, the arguments for scripting mode are :
-	- 1 to build and aggregate librispeech and TEDLIUM
-	- 2 To build librispeech
-	- 3 To build TEDLIUM
- 
+1  Build all datasets
+12 Build all clean datasets
+13 Build all other datasets
+2  Build all librispeech datasets
+22 Build all clean librispeach datasets
+23 Build all other librispeech datasets
+3  Build tedlium dataset
+
   ==> to build only TEDLIUM --> ./dataset_preparation.sh 3

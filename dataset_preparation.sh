@@ -11,7 +11,7 @@
 #define final file hierarchy:
 datasetdir="dataset"	#global dataset directory
 recdir="recordings"		#name of the directory used to store recordings
-texdir="transcripts"	#name of the directory used to store transcripts, if transcripts are to be saved in the same dir as wav, set this to the same value as var above.
+texdir="recordings"	#name of the directory used to store transcripts, if transcripts are to be saved in the same dir as wav, set this to the same value as var above.
 traindir="train"		#name of the dir containing training set
 testdir="test"			#name of the dir containing test set
 testval="500"			#number of entries in test set (0 if you don't want a test set)
@@ -30,7 +30,7 @@ red=`tput bold ``tput setaf 1`
 green=`tput bold``tput setaf 2`
 reset=`tput sgr0`
 
-echo "dataset_preparation.sh v0.16"
+echo "dataset_preparation.sh v0.18"
 for directo in "$recodir" "$textdir"; do
 if [[ ! -d "$directo" ]]; then #We create dataset dir if it doesn't exist, again, I recommend mounting from a separate drive.
     mkdir -p "$directo"
@@ -59,7 +59,7 @@ f_runtime
 }
 
 function f_librispeech { # aggregates librispeech datasets
-for h in dev-clean dev-other test-clean test-other train-clean-100 train-clean-360 train-other-500; do
+for h in $librisplist; do
     if [[ ! -f $h.tar.gz ]]; then
         echo "downloading $h.tar.gz"
         wget http://www.openslr.org/resources/12/$h.tar.gz
@@ -91,7 +91,7 @@ fi
 echo "Uncompressing TEDLIUM..." && echo "source http://www.openslr.org/resources/7/TEDLIUM_release1.tar.gz">>"dataset.desc"
 pv TEDLIUM_release1.tar.gz|tar -xzf -
 echo "Converting TEDLIUM to wav..."
-for h in dev test train; do
+for h in $tedliumlist; do
     cd TEDLIUM_release1/$h/stm
     for i in *; do
     rectitle="$(echo $i|sed 's/\.stm//')"
@@ -155,7 +155,7 @@ if [[ "$(which bc 2>/dev/null)" != "" ]]; then
 	runningtime="$(echo $(date +%s)-$starttime | bc -l)"
 	echo "${red}Current runtime is $(printf '%dh:%dm:%ds\n' $(($runningtime/3600)) $(($runningtime%3600/60)) $(($runningtime%60)))${reset}"
 	if [[ "$temptime" != "0" ]]; then
-		lastftime="$(echo "$(date +%s) - $temptime" | bc -l)"
+		lastftime="$(echo $(date +%s) - $temptime | bc -l)"
 		echo "previous function took $(printf '%dh:%dm:%ds\n' $(($runningtime/3600)) $(($runningtime%3600/60)) $(($runningtime%60)))"
 	fi
 	temptime=$(date +%s)
@@ -165,18 +165,18 @@ fi
 function f_custom_set {  # this is where we create and populate dev and test directories
 if [[ "$devval" > "0" ]]; then
 	echo "populating dev dataset ($devval samples)"
-	mkdir -p "$datasetdir/$devdir/{$recdir,$texdir}"
-	for i in "$(ls "$recodir"|shuf|head -n "$devval"|cut -f 1 -d".")"; do
-		mv "$recodir/$i.wav" "$datasetdir/$devdir/$recdir"
-		mv "$textdir/$i.txt" "$datasetdir/$devdir/$texdir"
+	mkdir -p "$datasetdir/$devdir/$recdir" "$datasetdir/$devdir/$texdir"
+	for i in $(ls "$recodir"|shuf|head -n "$devval"|cut -f 1 -d"."); do
+		mv "$recodir/$i.wav" "$datasetdir/$devdir/$recdir/"
+		mv "$textdir/$i.txt" "$datasetdir/$devdir/$texdir/"
 	done
 fi
 if [[ "$testval" > "0" ]]; then
 	echo "populating test dataset ($testval samples)"
-	mkdir -p "$datasetdir/$testdir/{$recdir,$texdir}"
-	for i in "$(ls "$recodir"|shuf|head -n "$testval"|cut -f 1 -d".")"; do
-		mv "$recodir/$i.wav" "$datasetdir/$testdir/$recdir"
-		mv "$textdir/$i.txt" "$datasetdir/$testdir/$texdir"
+	mkdir -p "$datasetdir/$testdir/$recdir" "$datasetdir/$testdir/$texdir"
+	for i in $(ls "$recodir"|shuf|head -n "$testval"|cut -f 1 -d"."); do
+		mv "$recodir/$i.wav" "$datasetdir/$testdir/$recdir/"
+		mv "$textdir/$i.txt" "$datasetdir/$testdir/$texdir/"
 	done
 fi
 echo "generating dataset.desc.tar.gz"
@@ -202,31 +202,37 @@ echo "/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/"
 }
 
 function f_script { # non interactive mode entry point
-if [[ "x$arg1" = "x1" ]]; then
-    f_purge_dataset_txt
-    f_librispeech
-    f_tedlium
-    f_clean_dataset
-    f_separate_transcript
-    f_count_time
-    f_custom_set
-elif [[ "x$arg1" = "x2" ]]; then
-    f_purge_dataset_txt
-    f_librispeech
-    f_clean_dataset
-    f_separate_transcript
-    f_count_time
-    f_custom_set
-elif [[ "x$arg1" = "x3" ]]; then
-    f_purge_dataset_txt
-    f_tedlium
-    f_clean_dataset
-    f_separate_transcript
-    f_count_time
-    f_custom_set
+if [[ "x$arg1" = "x1" ]]; then #Build all datasets
+	librisplist="dev-clean dev-other test-clean test-other train-clean-100 train-clean-360 train-other-500"
+	tedliumlist="dev test train"
+elif [[ "x$arg1" = "x12" ]]; then #Build all clean datasets
+	librisplist="dev-clean test-clean train-clean-100 train-clean-360"
+	tedliumlist=""
+elif [[ "x$arg1" = "x13" ]]; then #Build all other datasets
+	librisplist="dev-other test-other train-other-500"
+	tedliumlist="dev test train"
+elif [[ "x$arg1" = "x2" ]]; then #Build all librispeech datasets
+	librisplist="dev-clean dev-other test-clean test-other train-clean-100 train-clean-360 train-other-500"
+	tedliumlist=""
+elif [[ "x$arg1" = "x22" ]]; then #Build all clean librispeach datasets
+	librisplist="dev-clean test-clean train-clean-100 train-clean-360"
+	tedliumlist=""
+elif [[ "x$arg1" = "x23" ]]; then #Build all other librispeech datasets
+	librisplist="dev-other test-other train-other-500"
+	tedliumlist=""
+elif [[ "x$arg1" = "x3" ]]; then #Build tedlium dataset
+	librisplist=""
+	tedliumlist="dev test train"
 else
-	echo "argument unknown: $arg1 : please check README.md"
+	echo "argument unknown: $arg1 : please check README.md"; return 1
 fi
+f_purge_dataset_txt
+f_librispeech
+f_tedlium
+f_clean_dataset
+f_separate_transcript
+f_count_time
+f_custom_set
 }
 
 function m_main { # interactive mode entry point (displayed if called without args)
@@ -256,3 +262,6 @@ if [ "x$arg1" = "x" ]; then # go to main menu if there are no args
 elif [ "x$arg1" != "x" ]; then #goto script if there is an arg
 	f_script
 fi
+
+
+
